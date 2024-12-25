@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload Form</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #1c1c1c;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .upload-container {
+            background-color: #2c2c2c;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            width: 300px;
+        }
+
+        .upload-container h1 {
+            font-size: 20px;
+            color: #ffa500;
+            margin-bottom: 10px;
+        }
+
+        .upload-container p {
+            font-size: 14px;
+            color: #aaa;
+            margin-bottom: 20px;
+        }
+
+        .upload-box {
+            border: 2px dashed #555;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background-color: #333;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: border-color 0.3s ease, transform 0.3s ease;
+        }
+
+        .upload-box:hover {
+            border-color: #ffa500;
+            transform: scale(1.05);
+        }
+
+        .upload-box img {
+            width: 50px;
+            margin-bottom: 10px;
+            transition: opacity 0.3s ease;
+        }
+
+        .upload-box span {
+            display: block;
+            color: #888;
+            transition: opacity 0.3s ease;
+        }
+
+        .file-info {
+            font-size: 14px;
+            color: #ffa500;
+            margin-top: 10px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .submit-button {
+            background-color: #ffa500;
+            border: none;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        .submit-button:hover {
+            background-color: #ff8c00;
+            transform: scale(1.05);
+        }
+
+        .response-container {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #ffa500;
+        }
+
+        .error-container {
+            margin-top: 10px;
+            font-size: 14px;
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="upload-container">
+        <h1>Upload your file</h1>
+        <p>Fast and easy way</p>
+        <form id="uploadForm">
+            <div class="upload-box" id="uploadBox">
+                <img src="https://img.icons8.com/color/48/000000/folder-invoices.png" alt="Folder Icon">
+                <span>Drag and drop a file here or click to select</span>
+                <input type="file" id="fileInput" style="display: none;" accept="image/*" />
+            </div>
+            <div id="fileInfo" class="file-info"></div>
+            <button type="submit" class="submit-button">Submit</button>
+        </form>
+        <div id="responseContainer" class="response-container"></div>
+        <div id="errorContainer" class="error-container"></div>
+    </div>
+
+    <script>
+        const uploadBox = document.getElementById('uploadBox');
+        const fileInput = document.getElementById('fileInput');
+        const uploadForm = document.getElementById('uploadForm');
+        const responseContainer = document.getElementById('responseContainer');
+        const errorContainer = document.getElementById('errorContainer');
+        const fileInfo = document.getElementById('fileInfo');
+
+        // Handle drag-and-drop
+        uploadBox.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadBox.style.borderColor = '#ffa500';
+        });
+
+        uploadBox.addEventListener('dragleave', () => {
+            uploadBox.style.borderColor = '#555';
+        });
+
+        uploadBox.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadBox.style.borderColor = '#555';
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files; // Update the input element
+                displaySelectedFile(files[0]);
+            }
+        });
+
+        // Open file dialog on click
+        uploadBox.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // Display selected file info
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                displaySelectedFile(fileInput.files[0]);
+            }
+        });
+
+        function displaySelectedFile(file) {
+            if (file) {
+                fileInfo.textContent = `Selected file: ${file.name}`;
+            }
+        }
+
+        // Handle form submission
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault(); // Prevent default form submission
+
+            // Clear previous responses
+            responseContainer.textContent = '';
+            errorContainer.textContent = '';
+
+            const file = fileInput.files[0];
+            if (!file) {
+                errorContainer.textContent = 'Please select a file to upload.';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/upload', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to upload the file.');
+                }
+
+                const result = await response.json();
+                responseContainer.innerHTML = `
+                    <p>File uploaded successfully!</p>
+                    <p><a href="${result.access_url}" target="_blank">Access file here</a></p>
+                `;
+            } catch (error) {
+                errorContainer.textContent = `Error: ${error.message}`;
+            }
+        });
+    </script>
+</body>
+</html>
