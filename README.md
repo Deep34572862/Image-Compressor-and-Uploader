@@ -1,1 +1,1 @@
-# Image-Compressor-and-Uploader
+# Image Compressor and Uploader
